@@ -1,0 +1,7 @@
+cortex-training>=0.0.4
+snowflake-connector-python>=4.8
+keyring>=25.7
+requests>=2.34
+PyYAML>=6.0
+transformers>=5.22
+torch>=2.15

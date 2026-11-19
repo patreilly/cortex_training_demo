@@ -1,0 +1,7 @@
+version: 1
+artifacts:
+  - path: ../agent/SUPPORT_AGENT_TEACHER.agent.yaml
+    type: cortex_agent
+    targets:
+      default:
+        object: CT_DEMO_DB.CORTEX_TRAINING.SUPPORT_AGENT_TEACHER

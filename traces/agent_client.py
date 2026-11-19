@@ -24,11 +24,13 @@ class Session:
     """
 
     def __init__(self, connection_name=CONNECTION):
+        """Connect using a named connection from the Snowflake connections config."""
         self._name = connection_name
         self._lock = threading.Lock()
         self._connect()
 
     def _connect(self):
+        """Open a new connection and record the REST host and refresh time."""
         self.conn = snowflake.connector.connect(connection_name=self._name, client_session_keep_alive=True,
                                                 session_parameters={"QUERY_TAG": QUERY_TAG})
         # Underscores in the account locator are not valid in TLS hostnames.
@@ -36,6 +38,11 @@ class Session:
         self._last_refresh = time.time()
 
     def token(self, force=False):
+        """Return a valid REST session token.
+
+        force=True reconnects unconditionally (used after a 401/403); otherwise the session is
+        pinged at most every KEEPALIVE_S seconds and rebuilt if the ping fails.
+        """
         with self._lock:
             if force:
                 try:
@@ -52,16 +59,19 @@ class Session:
             return self.conn.rest.token
 
     def cursor(self):
+        """Return a cursor on a connection whose token has just been checked."""
         self.token()
         return self.conn.cursor()
 
 
 def connect():
+    """Create a Session and return it with the REST host to call."""
     session = Session()
     return session, session.host
 
 
 def _post(session, url, body, timeout, force_refresh=False):
+    """POST to the agent API with session-token auth and return the streaming response."""
     headers = {
         "Authorization": f'Snowflake Token="{session.token(force=force_refresh)}"',
         "Content-Type": "application/json",
@@ -71,18 +81,25 @@ def _post(session, url, body, timeout, force_refresh=False):
 
 
 def run_agent(session, host, question, agent=AGENT, timeout=300):
+    """Ask an agent a single question and collect every SSE event it streams back.
+
+    Returns {"status_code", "events", "elapsed_s"} plus "error" on a non-200 response. Each event
+    is {"event": <SSE event type>, "data": <parsed JSON or raw string>}.
+    """
     db, schema, name = agent
     url = f"https://{host}/api/v2/databases/{db}/schemas/{schema}/agents/{name}:run"
     body = {"messages": [{"role": "user", "content": [{"type": "text", "text": question}]}]}
     started = time.time()
     events = []
     resp = _post(session, url, body, timeout)
+    # An expired token shows up as 401/403; reconnect once and retry.
     if resp.status_code in (401, 403):
         resp.close()
         resp = _post(session, url, body, timeout, force_refresh=True)
     with resp:
         if resp.status_code != 200:
             return {"status_code": resp.status_code, "error": resp.text, "events": [], "elapsed_s": time.time() - started}
+        # SSE framing: an "event:" line names the type of the "data:" line that follows.
         event_type = None
         for raw in resp.iter_lines(decode_unicode=True):
             if raw is None:

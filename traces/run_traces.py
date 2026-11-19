@@ -25,6 +25,12 @@ _lock = threading.Lock()
 
 
 def summarize(events):
+    """Split a raw agent event stream into the parts we store.
+
+    Returns (final, thinking, errors, kept): the last `response` event payload (or None), all
+    thinking deltas joined into one string, any `error` event payloads, and every event except
+    the streaming text/thinking deltas (which `final` and `thinking` already capture).
+    """
     final = next((e["data"] for e in reversed(events) if e["event"] == "response"), None)
     thinking = "".join(
         e["data"].get("text", "") for e in events
@@ -36,6 +42,7 @@ def summarize(events):
 
 
 def trace_one(conn, host, row, attempts=2):
+    """Run the teacher agent on one request and return a trace record, retrying once on failure."""
     for _ in range(attempts):
         result = run_agent(conn, host, row["REQUEST_TEXT"])
         final, thinking, errors, kept = summarize(result["events"])
@@ -57,6 +64,7 @@ def trace_one(conn, host, row, attempts=2):
 
 
 def load_requests(cur, pilot, done_ids):
+    """Load TRACE_REQUESTS rows not in done_ids; with pilot=N, only the first N per intent."""
     if pilot:
         cur.execute(
             "SELECT REQUEST_ID, INTENT, REQUEST_TEXT FROM CT_DEMO_DB.CORTEX_TRAINING.TRACE_REQUESTS "
@@ -83,6 +91,7 @@ def already_done(path):
 
 
 def upload(conn, path):
+    """Load the local JSONL traces into AGENT_TRACES, replacing earlier rows for the same requests."""
     cur = conn.cursor()
     cur.execute("USE SCHEMA CT_DEMO_DB.CORTEX_TRAINING")
     cur.execute(
@@ -108,6 +117,7 @@ def upload(conn, path):
 
 
 def main():
+    """Parse arguments, trace all pending requests in parallel, and upload the results."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--pilot", type=int, default=0)
     ap.add_argument("--all", action="store_true")

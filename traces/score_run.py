@@ -18,6 +18,10 @@ import argparse
 
 from agent_client import connect
 
+# All scoring runs in Snowflake as one INSERT ... SELECT. CTE flow: runs (this run's traces) ->
+# calls (tools used, escalation teams) / answers (final text) / mentions (MUST_MENTION check)
+# -> base (deterministic checks) -> judged (LLM judge via AI_COMPLETE) -> PASS.
+# "%%" in the prompt is an escaped "%" for the connector's pyformat parameter binding.
 SCORE_SQL = """
 INSERT INTO CT_DEMO_DB.CORTEX_TRAINING.AGENT_BENCHMARK_SCORES
   (RUN_NAME, CASE_ID, CASE_SET, INTENT, REQUIRED_TOOLS_OK, DISALLOWED_TOOL_USED, UNEXPECTED_WRITE,
@@ -116,6 +120,7 @@ ORDER BY CASE_SET NULLS LAST, INTENT NULLS LAST
 
 
 def main():
+    """Re-score a run from scratch, then print pass rates by case set and intent (with rollups)."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--run-name", required=True)
     ap.add_argument("--judge-model", default="mistral-large2")

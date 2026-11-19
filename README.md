@@ -4,11 +4,11 @@ Fine-tune a small open model (Qwen3.5-4B) on traces from a Cortex Agent running 
 
 * Everything here is driven from SQL and Python, so you can run it end to end from Cortex Code (CoCo): open this folder and ask CoCo to work through the steps below. All data is synthetic (a fictional SaaS company, "Northwind Cloud").
 * This work is inspired by our official blog by Vinay Sridhar on ["Own Your Intelligence with Cortex Training"](https://www.snowflake.com/en/blog/cortex-training-fine-tune-open-weight-llms/#cost-efficiency-through-an-open-foundation).
-* Please also see [our official documentation on this release](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-training) and reach out to your account team for access!
+* Please also see [our official documentation on this release](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-training) and reach out to your account team for questions!
 
 ## Prerequisites
 
-1. **Cortex Training enabled on the account.** It is in preview, available in commercial AWS regions, and requires enablement. Ask your Snowflake account team.
+1. **Cortex Training is enabled on all accounts.** Available to all accounts, available in commercial AWS regions.
 2. **Claude Sonnet 4.5 available to Cortex Agents** in your region, or cross-region inference enabled.
 3. **A role** that can create a database, tables, UDFs, a stored procedure, a Cortex Search service, a semantic view and a Cortex Agent, and that can use Cortex AI functions (the scorer uses `mistral-large2` as a judge).
 4. **A Snowflake connection** in `~/.snowflake/connections.toml`. Every script reads its name from `SNOWFLAKE_CONNECTION_NAME` (default `default`):

@@ -2,7 +2,9 @@
 
 Fine-tune a small open model (Qwen3.5-4B) on traces from a Cortex Agent running Claude Sonnet 4.5, then measure how close the student gets to the teacher, and what it would cost to run instead.
 
-Everything here is driven from SQL and Python, so you can run it end to end from Cortex Code (CoCo): open this folder and ask CoCo to work through the steps below. All data is synthetic (a fictional SaaS company, "Northwind Cloud").
+* Everything here is driven from SQL and Python, so you can run it end to end from Cortex Code (CoCo): open this folder and ask CoCo to work through the steps below. All data is synthetic (a fictional SaaS company, "Northwind Cloud").
+* This work is inspired by our official blog by Vinay Sridhar on ["Own Your Intelligence with Cortex Training"](https://www.snowflake.com/en/blog/cortex-training-fine-tune-open-weight-llms/#cost-efficiency-through-an-open-foundation).
+* Please also see [our official documentation on this release](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-training) and reach out to your account team for access!
 
 ## Prerequisites
 
